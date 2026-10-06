@@ -1,14 +1,12 @@
-<section class="details-card" aria-label="Response details">
-  <header class="card-heading">
-    <span class="heading-mark" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
-    </span>
-    <div class="heading-copy"><span class="eyebrow">REPORT SUMMARY</span><h3>Response details</h3></div>
+<section class="details-panel" aria-label="Response details">
+  <header class="details-heading">
+    <span class="heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>
+    <h3>Response details</h3>
     <span class="field-count">{{ fields().length }} fields</span>
   </header>
-  <dl class="details-list">
+  <dl class="details-grid">
     @for (field of fields(); track field.key) {
-      <div class="detail-row" [class.prominent]="field.prominent">
+      <div class="detail-field" [class.prominent]="field.prominent" [class.wide]="field.wide">
         <dt>{{ field.key }}</dt>
         <dd>{{ field.value }}</dd>
       </div>
