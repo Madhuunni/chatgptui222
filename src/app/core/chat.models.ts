@@ -1,7 +1,20 @@
 export type DetailValue = string | number | boolean | null;
 export type ResponseDetails = Record<string, DetailValue>;
 export type ReportFormat = 'pdf' | 'xls' | 'xlsx';
-export interface ReportDownload { url: string; fileName: string; format: ReportFormat; }
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+export interface ReportDownload {
+  url: string;
+  fileName: string;
+  format: ReportFormat;
+  method?: 'GET' | 'POST';
+  body?: Record<string, JsonValue>;
+}
+function isJsonValue(value: unknown): value is JsonValue {
+  if (value === null || typeof value === 'string' || typeof value === 'boolean') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJsonValue);
+  return isRecord(value) && Object.values(value).every(isJsonValue);
+}
 export type ChatReply =
   | { type: 'text'; content: string; details?: never; report?: never }
   | { type: 'download'; content: string; report: ReportDownload; details?: never }
@@ -24,7 +37,15 @@ function parseReport(value: unknown): ReportDownload {
   // Permit relative URLs and HTTP(S); reject javascript:, data:, file: and malformed URLs.
   const url = value['url'].trim();
   if (!['http:', 'https:'].includes(new URL(url, 'https://chat.invalid/').protocol)) throw new Error('Invalid report URL.');
-  return { url, fileName: value['fileName'], format: value['format'] as ReportFormat };
+  const method = value['method'];
+  if (method !== undefined && method !== 'GET' && method !== 'POST') throw new Error('Invalid report method.');
+  const body = value['body'];
+  if (method === 'POST' && (!isRecord(body) || !isJsonValue(body))) throw new Error('POST report requires a JSON object body.');
+  if (method !== 'POST' && body !== undefined) throw new Error('Report body requires POST.');
+  return { url, fileName: value['fileName'], format: value['format'] as ReportFormat,
+    ...(method === undefined ? {} : { method }),
+    ...(method === 'POST' ? { body: body as Record<string, JsonValue> } : {}) };
+
 }
 /** Runtime validation is required: a TypeScript type alone does not validate API JSON. */
 export function parseChatReply(value: unknown): ChatReply {
